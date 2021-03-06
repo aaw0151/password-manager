@@ -19,7 +19,7 @@ from Crypto.Protocol.KDF import PBKDF2
 passwordFile = "passwords.pwm"
 
 ## Salts Filename (not encrypted):
-saltFile = "salts.pwm"
+saltFile = "salts.slt"
 
 ## Main Salt Value:
 salt = "773r68765mUKUJgKBe9ey7Hp68TqXm2ASLzjbjWwr6XyqCF79xhwR24J9PmjCAB5"
@@ -59,6 +59,19 @@ def decrypt(k):
                 data = cipher.decrypt_and_verify(ciphertext, tag)
 
                 return data
+
+#function used to get an entry's salt from the salt file
+def GetSalt(entry):
+    saltForPass = '' #initializing salt for password
+    with open(saltFile, 'r') as outfile: #opening salt file
+        saltData = outfile.readlines() #reading all salts
+        for singleSalt in saltData: #interating through all salts
+            saltSplit = singleSalt.split(" ") #spliting salt into entry and salt
+            if str(saltSplit[0]) == str(entry): #checking entry for the same entry in the salt file
+                saltForPass = saltSplit[1].rstrip("\n") #setting salt
+                return saltForPass
+
+
 def Main():
         print("\n\n")
 
@@ -93,31 +106,13 @@ def Main():
         if len(sys.argv) != 2: # check for printing all stored passwords
                 for entry in pws:
                     if entry != "":
-                        saltForPass = '' #initializing salt for password
-                        with open(saltFile, 'r') as outfile: #opening salt file
-                            saltData = outfile.readlines() #reading all salts
-                            for singleSalt in saltData: #interating through all salts
-                                saltSplit = singleSalt.split(" ") #spliting salt into entry and salt
-                                if str(saltSplit[0]) == str(entry): #checking entry for the same entry in the salt file
-                                    saltForPass = saltSplit[1].rstrip("\n") #setting salt
-                                    break
-                        print("entry   : %20s | pass: %s" % (str(entry), str(pws[entry]).replace(saltForPass, "")))
+                        print("entry   : %20s | pass: %s" % (str(entry), str(pws[entry]).replace(GetSalt(entry), "")))
                 return
         entry = sys.argv[1]
         if entry in pws: #if entry exists
-                saltForPass = '' #initializing salt for password
-                with open(saltFile, 'r') as outfile: #opening salt file
-                    saltData = outfile.readlines() #reading all salts
-                    for singleSalt in saltData: #interating through all salts
-                        saltSplit = singleSalt.split(" ") #spliting salt into entry and salt
-                        if str(saltSplit[0]) == str(entry): #checking entry for the same entry in the salt file
-                            saltForPass = saltSplit[1].rstrip("\n") #setting salt
-                            break
-                
                 #printing password
                 print("entry   : " + str(entry))
-                print("passsalt: " + str(pws[entry]))
-                print("password: " + str(pws[entry]).replace(saltForPass, ""))
+                print("password: " + str(pws[entry]).replace(GetSalt(entry), ""))
         
         else: #no entry for that website
                 print("No entry for " + str(entry) + ", creating new...")
